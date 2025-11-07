@@ -1,0 +1,46 @@
+@import 'react-toastify/dist/ReactToastify.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer components {
+  .toastify-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    width: 320px;
+    z-index: 9999;
+  }
+  
+  .Toastify__toast {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 0.5rem;
+  }
+  
+  .Toastify__toast--success {
+    background: linear-gradient(135deg, #27AE60, #2ECC71);
+    color: white;
+  }
+  
+  .Toastify__toast--error {
+    background: linear-gradient(135deg, #E74C3C, #EC7063);
+    color: white;
+  }
+  
+  .Toastify__toast--info {
+    background: linear-gradient(135deg, #3498DB, #5DADE2);
+    color: white;
+  }
+}
