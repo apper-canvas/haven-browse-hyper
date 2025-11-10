@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { motion } from "framer-motion";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
@@ -8,6 +11,16 @@ import Badge from "@/components/atoms/Badge";
 import Empty from "@/components/ui/Empty";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
+
+// Create custom icon for property markers
+const customIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 const MapView = () => {
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -109,84 +122,89 @@ if (properties.length === 0) {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative bg-gradient-to-br from-blue-50 to-indigo-100">
-        {/* Mock Map Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-200 opacity-50"></div>
-        
-        {/* Map Content */}
-        <div className="relative h-full flex items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center bg-white rounded-xl shadow-lg p-8 max-w-md mx-4"
+<div className="flex-1 relative h-full">
+        {/* Interactive Map */}
+        <div className="h-full w-full">
+          <MapContainer
+            center={[39.8283, -98.5795]} // Center of United States
+            zoom={4}
+            className="h-full w-full rounded-none"
+            style={{ height: '100%', width: '100%' }}
           >
-            <div className="mb-6 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary to-blue-700 rounded-full shadow-lg">
-              <ApperIcon name="MapPin" className="h-8 w-8 text-white" />
-            </div>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
             
-            <h2 className="text-xl font-display font-semibold text-gray-900 mb-3">
-              Interactive Map Coming Soon
-            </h2>
-            
-            <p className="text-gray-600 font-body mb-6 leading-relaxed">
-              We're working on an interactive map that will show all {properties.length} properties with clickable markers and detailed previews. 
-              For now, you can browse properties in the grid view.
-            </p>
-
-            {/* Property Locations Preview */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Properties by Location:
-              </h3>
-              <div className="grid grid-cols-1 gap-2 text-sm">
-                {properties.slice(0, 5).map((property) => (
-                  <div key={property.Id} className="flex items-center justify-between">
-                    <span className="text-gray-600 font-body">
-                      {property.city}, {property.state}
-                    </span>
-                    <Badge variant="accent" className="text-xs">
-                      {formatPrice(property.price)}
-                    </Badge>
-                  </div>
-                ))}
-                {properties.length > 5 && (
-                  <div className="text-gray-500 text-xs mt-2">
-                    +{properties.length - 5} more properties
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <Button 
-              onClick={() => window.location.href = "/"}
-              className="w-full"
-            >
-              <ApperIcon name="Grid3x3" className="h-4 w-4 mr-2" />
-              Browse Grid View
-            </Button>
-          </motion.div>
-        </div>
-
-        {/* Mock Map Markers */}
-        <div className="absolute inset-0 pointer-events-none">
-          {properties.slice(0, 8).map((property, index) => (
-            <motion.div
-              key={property.Id}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              className="absolute"
-              style={{
-                left: `${20 + (index % 4) * 15}%`,
-                top: `${30 + Math.floor(index / 4) * 20}%`,
-              }}
-            >
-              <div className="bg-accent text-white px-2 py-1 rounded-full shadow-lg text-xs font-medium">
-                {formatPrice(property.price)}
-              </div>
-            </motion.div>
-          ))}
+            {/* Property Markers */}
+            {properties.map((property, index) => {
+              // Generate coordinates if not available (for demo purposes)
+              const lat = property.latitude || (32 + Math.random() * 15); // Fallback coordinates
+              const lng = property.longitude || (-120 + Math.random() * 40);
+              
+              return (
+                <Marker
+                  key={property.Id}
+                  position={[lat, lng]}
+                  icon={customIcon}
+                >
+                  <Popup className="custom-popup">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-2 max-w-xs"
+                    >
+                      {/* Property Image */}
+                      <div className="mb-3 aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={property.image}
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300&q=80';
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Property Details */}
+                      <div className="space-y-2">
+                        <h3 className="font-display font-semibold text-gray-900 text-sm">
+                          {property.title}
+                        </h3>
+                        
+                        <div className="flex items-center justify-between">
+                          <Badge variant="accent" className="text-xs">
+                            {formatPrice(property.price)}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {property.propertyType}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center text-xs text-gray-600">
+                          <ApperIcon name="MapPin" className="h-3 w-3 mr-1" />
+                          {property.city}, {property.state}
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{property.bedrooms} bed • {property.bathrooms} bath</span>
+                          <span>{property.sqft} sqft</span>
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          className="w-full mt-3 text-xs"
+                          onClick={() => window.location.href = `/property/${property.Id}`}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
         </div>
       </div>
 </div>
