@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useAuth } from "@/layouts/Root";
+import Button from "@/components/atoms/Button";
 import { motion } from "framer-motion";
 import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
@@ -12,7 +15,14 @@ const Header = ({ onSearch, onToggleFilters, favoritesCount = 0 }) => {
     { name: "Browse Listings", href: "/", icon: "Home" },
     { name: "Map View", href: "/map", icon: "Map" },
     { name: "Favorites", href: "/favorites", icon: "Heart" }
-  ];
+];
+
+  const { user, isAuthenticated } = useSelector(state => state.user);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <header className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-40">
@@ -108,7 +118,37 @@ const Header = ({ onSearch, onToggleFilters, favoritesCount = 0 }) => {
                   </span>
                 )}
               </Link>
-            ))}
+))}
+            
+            {/* Auth Section */}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4 ml-4">
+                <span className="text-sm text-gray-600">
+                  Welcome, {user?.firstName || user?.emailAddress || 'User'}
+                </span>
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="text-sm"
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 ml-4">
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary" size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
             
             <button
               onClick={() => {
