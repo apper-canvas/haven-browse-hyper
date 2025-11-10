@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { motion } from "framer-motion";
+import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Badge from "@/components/atoms/Badge";
+import Empty from "@/components/ui/Empty";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
-import { propertyService } from "@/services/api/propertyService";
-
 const MapView = () => {
-  const { filters, searchTerm, setFilters, setSearchTerm } = useOutletContext();
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
+  // Load properties data on component mount
   useEffect(() => {
     loadProperties();
   }, [filters, searchTerm]);
-
-  const loadProperties = async () => {
+const loadProperties = async () => {
     try {
       setLoading(true);
       setError("");
@@ -46,30 +46,46 @@ const MapView = () => {
     setSearchTerm("");
   };
 
+  // Format price for display
   const formatPrice = (price) => {
+    if (!price) return "Price not available";
     return `$${(price / 1000).toFixed(0)}K`;
   };
-
+// Handle loading state
   if (loading) {
-    return <Loading />;
-  }
-
-  if (error) {
     return (
-      <div className="p-6">
-        <ErrorView message={error} onRetry={handleRetry} />
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Loading />
       </div>
     );
   }
 
-  if (properties.length === 0) {
+  // Handle error state
+  if (error) {
     return (
-      <div className="p-6">
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <ErrorView 
+          message={error}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+
+  // Handle empty state
+
+if (properties.length === 0) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
         <Empty 
-          title="No properties found"
-          message="We couldn't find any properties matching your current search criteria. Try adjusting your filters or search location to discover more homes."
-          actionText="Clear All Filters"
-          onAction={handleClearFilters}
+          title="No Properties Available"
+          description="We couldn't find any properties matching your current search criteria. Try adjusting your filters or search location to discover more homes."
+          action={
+            <Button onClick={handleClearFilters}>
+              <ApperIcon name="RefreshCw" className="h-4 w-4 mr-2" />
+              Clear All Filters
+            </Button>
+          }
         />
       </div>
     );
@@ -173,7 +189,7 @@ const MapView = () => {
           ))}
         </div>
       </div>
-    </div>
+</div>
   );
 };
 
