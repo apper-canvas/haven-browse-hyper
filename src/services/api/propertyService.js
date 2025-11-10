@@ -28,11 +28,23 @@ class PropertyService {
       'isFavorite': 'is_favorite_c'
     };
   }
-
-  async delay(ms = 300) {
+async delay(ms = 300) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // Helper method to safely parse JSON strings
+  safeJsonParse(jsonString, fallbackValue = null) {
+    if (!jsonString || typeof jsonString !== 'string') {
+      return fallbackValue;
+    }
+    
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.warn('Failed to parse JSON:', jsonString, 'Error:', error.message);
+      return fallbackValue;
+    }
+  }
   transformToMockFormat(dbRecord) {
     const mockRecord = {
       Id: dbRecord.Id,
@@ -49,10 +61,10 @@ class PropertyService {
       lotSize: dbRecord.lot_size_c || 0,
       yearBuilt: dbRecord.year_built_c || 0,
       description: dbRecord.description_c || '',
-      features: dbRecord.features_c ? JSON.parse(dbRecord.features_c) : [],
-      amenities: dbRecord.amenities_c ? JSON.parse(dbRecord.amenities_c) : [],
-      images: dbRecord.images_c ? JSON.parse(dbRecord.images_c) : [],
-      coordinates: dbRecord.coordinates_c ? JSON.parse(dbRecord.coordinates_c) : { lat: 0, lng: 0 },
+features: this.safeJsonParse(dbRecord.features_c, []),
+      amenities: this.safeJsonParse(dbRecord.amenities_c, []),
+      images: this.safeJsonParse(dbRecord.images_c, []),
+      coordinates: this.safeJsonParse(dbRecord.coordinates_c, { lat: 0, lng: 0 }),
       status: dbRecord.status_c || 'For Sale',
       listedDate: dbRecord.listed_date_c || '',
       isFavorite: dbRecord.is_favorite_c || false
